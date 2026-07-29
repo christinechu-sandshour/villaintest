@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>濫好人指數測驗｜反派學</title>
+<style>
+  :root{
+    --bg:#121110; --bg2:#1b1917; --line:#2e2b28;
+    --ink:#f0ece6; --ink2:#a49d94; --ink3:#6d665e;
+    --accent:#a33b3b; --accent2:#c9553f; --gold:#c9a55c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei","微軟正黑體",sans-serif;
+    line-height:1.75; -webkit-font-smoothing:antialiased;
+    min-height:100vh; display:flex; justify-content:center; padding:0;
+  }
+  .wrap{width:100%; max-width:640px; padding:0 22px 80px;}
+
+  /* ---------- 進度 ---------- */
+  .bar{position:sticky;top:0;z-index:10;background:var(--bg);padding:18px 0 14px;}
+  .bar-track{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+  .bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s cubic-bezier(.4,0,.2,1)}
+  .bar-txt{font-size:12px;color:var(--ink3);letter-spacing:.1em;margin-top:8px}
+
+  /* ---------- 封面 ---------- */
+  .cover{padding:64px 0 40px; animation:fade .5s ease}
+  .kicker{font-size:12px;letter-spacing:.28em;color:var(--accent2);margin-bottom:22px}
+  h1{font-size:38px;line-height:1.3;font-weight:800;letter-spacing:-.01em;margin-bottom:18px}
+  h1 .hl{color:var(--accent2)}
+  .lede{color:var(--ink2);font-size:16px;margin-bottom:14px}
+  .lede strong{color:var(--ink);font-weight:600}
+  .meta{font-size:13px;color:var(--ink3);margin:28px 0 34px;padding-top:18px;border-top:1px solid var(--line)}
+
+  /* ---------- 題目 ---------- */
+  .q{animation:fade .4s ease}
+  .qnum{font-size:12px;letter-spacing:.2em;color:var(--accent2);margin:34px 0 14px}
+  .qtext{font-size:21px;line-height:1.6;font-weight:700;margin-bottom:8px}
+  .qsub{font-size:14px;color:var(--ink3);margin-bottom:26px}
+  .opt{
+    display:block;width:100%;text-align:left;cursor:pointer;
+    background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;margin-bottom:11px;color:var(--ink);
+    font-size:15.5px;line-height:1.6;font-family:inherit;
+    transition:border-color .18s, background .18s, transform .12s;
+  }
+  .opt:hover{border-color:var(--accent);background:#211d1b}
+  .opt:active{transform:scale(.99)}
+
+  .back{background:none;border:none;color:var(--ink3);font-size:13px;cursor:pointer;
+        margin-top:22px;padding:6px 0;font-family:inherit}
+  .back:hover{color:var(--ink2)}
+
+  /* ---------- 結果 ---------- */
+  .res{animation:fade .55s ease;padding-top:44px}
+  .score-row{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .score{font-size:64px;font-weight:800;line-height:1;color:var(--accent2)}
+  .score-unit{font-size:15px;color:var(--ink3)}
+  .score-label{font-size:12px;letter-spacing:.24em;color:var(--ink3);margin-bottom:24px}
+  .level{font-size:34px;font-weight:800;margin-bottom:14px;line-height:1.3}
+  .level-sub{font-size:15px;color:var(--gold);margin-bottom:26px;letter-spacing:.02em}
+  .scene{
+    background:var(--bg2);border-left:3px solid var(--accent);
+    padding:20px 22px;border-radius:0 10px 10px 0;margin-bottom:30px;
+    font-size:16px;line-height:1.85;color:var(--ink);
+  }
+  .sec-t{font-size:12px;letter-spacing:.22em;color:var(--accent2);margin:32px 0 14px}
+  ul.sym{list-style:none}
+  ul.sym li{padding:11px 0 11px 24px;border-bottom:1px solid var(--line);position:relative;font-size:15.5px;color:var(--ink2)}
+  ul.sym li:before{content:"—";position:absolute;left:0;color:var(--accent)}
+  .verdict{
+    margin:30px 0;padding:22px;border:1px solid var(--line);border-radius:12px;
+    background:linear-gradient(160deg,#1e1a18,#161413);
+  }
+  .verdict-t{font-size:12px;letter-spacing:.22em;color:var(--ink3);margin-bottom:10px}
+  .verdict-b{font-size:19px;font-weight:700;line-height:1.6}
+  .verdict-b em{font-style:normal;color:var(--accent2)}
+
+  .rx{margin-top:12px}
+  .rx-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .rx-ep{flex:0 0 52px;font-size:13px;color:var(--gold);font-weight:700;padding-top:2px}
+  .rx-body{flex:1}
+  .rx-title{font-size:15.5px;font-weight:600;margin-bottom:3px}
+  .rx-why{font-size:13.5px;color:var(--ink3);line-height:1.65}
+
+  .cta{
+    display:block;width:100%;text-align:center;margin-top:34px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;border:none;border-radius:12px;padding:19px;
+    font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;
+    letter-spacing:.02em;transition:opacity .18s
+  }
+  .cta:hover{opacity:.9}
+  .cta-note{text-align:center;font-size:13px;color:var(--ink3);margin-top:12px}
+  .cta2{
+    display:block;width:100%;text-align:center;margin-top:12px;
+    background:none;color:var(--ink2);border:1px solid var(--line);border-radius:12px;
+    padding:16px;font-size:15px;font-family:inherit;cursor:pointer;transition:border-color .18s,color .18s
+  }
+  .cta2:hover{border-color:var(--accent);color:var(--ink)}
+
+  .care{
+    margin-top:34px;padding:18px 20px;border:1px solid var(--line);
+    border-radius:10px;font-size:13.5px;color:var(--ink3);line-height:1.8
+  }
+  .foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);
+        font-size:12px;color:var(--ink3);line-height:1.9}
+  .scale{display:flex;gap:4px;margin:26px 0 6px}
+  .scale-seg{flex:1;height:5px;border-radius:3px;background:var(--line)}
+  .scale-seg.on{background:var(--accent2)}
+  .scale-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);letter-spacing:.06em}
+
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media(max-width:420px){h1{font-size:31px}.level{font-size:28px}.score{font-size:54px}.qtext{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ========== 封面 ========== -->
+  <div id="cover" class="cover">
+    <div class="kicker">反派學　趣味測驗</div>
+    <h1>你的<span class="hl">濫好人指數</span><br>是幾分？</h1>
+    <p class="lede">退一步，對方就進了兩步。<br>你不是脾氣好，你可能只是<strong>還沒發現自己可以有立場</strong>。</p>
+    <p class="lede">十個情境，看看你的善良現在站在哪個位置——是圍欄裡的羊，還是荒野上的狼。</p>
+    <div class="meta">10 題　約 90 秒　結果會告訴你，你缺的到底是什麼</div>
+    <button class="cta" onclick="start()">開始測驗</button>
+    <div class="cta-note">這是趣味測驗，不是心理衡鑑</div>
+  </div>
+
+  <!-- ========== 題目 ========== -->
+  <div id="quiz" style="display:none">
+    <div class="bar">
+      <div class="bar-track"><div class="bar-fill" id="fill"></div></div>
+      <div class="bar-txt" id="prog"></div>
+    </div>
+    <div class="q" id="qbox"></div>
+    <button class="back" id="backBtn" onclick="back()">← 上一題</button>
+  </div>
+
+  <!-- ========== 結果 ========== -->
+  <div id="result" style="display:none"></div>
+
+</div>
+
+<script>
+/* ===================== 題庫 ===================== */
+/* 分數方向：越高＝越濫好人。每題最高 10 分，滿分 100。 */
+const QS = [
+  { q:"群組裡有人問「這個有人可以幫忙嗎？」已讀十二個人，沒有人回。",
+    s:"三分鐘過去了，訊息還躺在那裡。",
+    a:[["我通常會是第一個跳出來的",10],
+       ["再等一下下，真的沒人我才回",7],
+       ["看是誰問的，再決定",3],
+       ["不關我的事，我不會回",0]] },
+
+  { q:"同事把一件事丟過來，說「這個你比較會啦」。",
+    s:"你確實比較會。但這也確實不是你的事。",
+    a:[["心裡嘆一口氣，還是接了",10],
+       ["接了，但會唸他一句",7],
+       ["先問清楚為什麼是我",3],
+       ["直接說我沒空",0]] },
+
+  { q:"你剛剛拒絕了一個請求。當天晚上——",
+    s:"燈關了，事情卻還在腦子裡轉。",
+    a:[["一直在想是不是講太重了",10],
+       ["有點在意，但還過得去",7],
+       ["早就忘了這件事",3],
+       ["我很少需要拒絕，因為別人不太敢找我",0]] },
+
+  { q:"老闆今天臉色很臭，跟你講話特別短。",
+    s:"他只說了兩個字：「知道了。」",
+    a:[["我開始回想我哪裡做錯了",10],
+       ["有點在意，接下來會小心一點",7],
+       ["應該是他自己的事吧",3],
+       ["我沒注意到",0]] },
+
+  { q:"你幫了一個很大的忙，對方沒有說謝謝。",
+    s:"不是忘了，是他覺得理所當然。",
+    a:[["算了，我本來就不是為了道謝",10],
+       ["有點失落，但不會講出來",7],
+       ["心裡記一筆，下次不幫",3],
+       ["我不太做沒有回報的事",0]] },
+
+  { q:"週五下午五點半，主管說「這個下週一早上要」。",
+    s:"你的週末剛剛被人拿走了。",
+    a:[["好，我週末處理",10],
+       ["週末做，但會表達一下我的為難",7],
+       ["問能不能週一早上開始做",3],
+       ["直接說週一給你",0]] },
+
+  { q:"開會的時候，你的提案被別人講成是他的。",
+    s:"全場都在點頭，包括你的主管。",
+    a:[["當下沒說話，回家想了三天",10],
+       ["會後私下跟他說",7],
+       ["當場補一句「對，這是我剛剛提的」",3],
+       ["我在提案前就會先留下紀錄",0]] },
+
+  { q:"有人用「開玩笑」的方式，講了你不舒服的話。",
+    s:"然後補一句：「欸你不要那麼認真啦。」",
+    a:[["跟著笑，假裝沒事",10],
+       ["笑一下，但心裡不舒服很久",7],
+       ["當場說「這樣講我不太喜歡」",3],
+       ["我會反問他，為什麼要講這個",0]] },
+
+  { q:"想一下「我這輩子最想達成的事」。你的第一個念頭是——",
+    s:"不用想太久，第一個冒出來的就算。",
+    a:[["好像……沒有特別想到什麼",10],
+       ["有，但我覺得應該不太可能",7],
+       ["有，我正在慢慢做",3],
+       ["有，而且我知道下一步是什麼",0]] },
+
+  { q:"有個人一直跟你訴苦。同樣的問題講了半年，也沒打算改。",
+    s:"這禮拜他又傳訊息來了。",
+    a:[["還是會聽，他需要有人聽他說",10],
+       ["會聽，但開始覺得有點累",7],
+       ["減少回應的頻率",3],
+       ["我已經不太聯絡了",0]] },
+];
+
+/* ===================== 分級 ===================== */
+const LEVELS = [
+  {
+    min:80, name:"圍欄裡的羊", tag:"重度｜你的善良已經欠了自己很久",
+    scene:"你不是不會拒絕，你是每一次拒絕之後都要花三天替自己贖罪。所以久而久之，答應變成比較便宜的選項。<br><br>問題是，圍欄裡從來就沒有安全這回事。它只是把你圈在一個「你的付出被視為理所當然」的範圍裡。",
+    sym:["別人的情緒，你會下意識當成自己的責任","你的行事曆是被別人填滿的，不是被你自己","你想不起來最近一次「為自己」做的決定是什麼","你不是沒有脾氣，你是把它們全部吞回去了"],
+    verdict:"你缺的不是<em>善良</em>，是<em>選擇</em>。你的善良從來沒有機會證明自己是真的——因為你根本沒給過自己第二個選項。",
+    rx:[["1-1","你的善良，是因為沒得選擇嗎？","從這一集開始。它會用一個問題，把你的自我認同拆開來看一次。"],
+        ["3-3","把對方的情緒還給對方","你目前最大的漏洞是替別人扛情緒。這一集直接處理它。"],
+        ["1-4","反派的資源配置","做完「不做清單」，你的行事曆會第一次有你自己的名字。"]],
+    cta:"免費聽七天，從 1-1 開始",
+    share:"我的濫好人指數 __分__，官方認證圍欄裡的羊 🐑",
+    care:true
+  },
+  {
+    min:60, name:"開始抬頭的羊", tag:"中度｜你已經知道不對勁了",
+    scene:"你已經會在心裡翻白眼，這是好事——代表那個「我怎麼又答應了」的自己開始有聲音了。<br><br>但目前為止，翻白眼還只停留在心裡。你的界線是隱形的，只有你自己知道它在哪，所以沒有人會遵守它。",
+    sym:["你會抱怨，但抱怨完還是照做","你的拒絕通常包著三層解釋和一句對不起","你分得出誰在利用你，但還是不太敢直說","你偶爾會想「如果我狠一點會怎樣」，然後就沒有然後了"],
+    verdict:"你缺的不是<em>覺察</em>，是<em>語言</em>。你已經看見了，只是還沒有一句話可以說出口。",
+    rx:[["3-4","面對打壓，怎麼把問題拋回去","給你當場可以用的句子，不用等到回家才想到怎麼回。"],
+        ["3-2","放下你的聖母心","你幫的那些人，有些是真的需要，有些只是習慣了。這一集教你分。"],
+        ["1-1","你的善良，是因為沒得選擇嗎？","補上地基。知道自己為什麼要立界線，界線才守得住。"]],
+    cta:"免費聽七天，從 3-4 開始",
+    share:"我的濫好人指數 __分__，一隻開始抬頭的羊 🐑",
+    care:true
+  },
+  {
+    min:40, name:"剛長牙的狗", tag:"輕度｜你會反擊，只是還不穩",
+    scene:"你已經拒絕過人，也活下來了，世界沒有塌。這是最關鍵的一次經驗。<br><br>但你的強硬還是情緒性的——好的時候滴水不漏，累的時候一句話就被推翻。你缺的不是勇氣，是一套不靠當天心情運作的系統。",
+    sym:["你的界線是浮動的，看當天的能量","你會後悔——有時後悔太軟，有時後悔太兇","你已經懂得說不，但說完還是會補償性地多做一點","遇到強勢的人，你的判斷力會掉一半"],
+    verdict:"你缺的不是<em>力氣</em>，是<em>穩定</em>。真正的底氣不是每次都贏，是每次都一樣。",
+    rx:[["2-4","反派的底氣，是凡事做好準備","把臨場反應換成事前設計。恐懼會變成佈局的養分。"],
+        ["2-1","自己選擇，自己負責","把「早知道」翻譯成「接下來」。這個轉換會讓你不再內耗。"],
+        ["2-5","反派的大戰只會有你一個人","認知升級會讓你格格不入。這一集告訴你那是正常的。"]],
+    cta:"免費聽七天，從第二章開始",
+    share:"我的濫好人指數 __分__，一隻剛長牙的狗 🐕",
+    care:false
+  },
+  {
+    min:20, name:"牧羊犬", tag:"健康｜有獠牙，也有底線",
+    scene:"你有能力讓別人不好過，但你選擇不。這不是軟弱，這是這個測驗裡最高的位置。<br><br>你已經走完了大部分人還在掙扎的路。真正的問題不在防守——是你的力量現在用在哪裡。守著一群羊，跟走出去劃定自己的戰場，是兩件事。",
+    sym:["你會拒絕，而且不需要解釋太多","你的情緒不太容易被別人綁架","你身邊常有人來找你討主意","但你有時候會覺得：守成有了，然後呢？"],
+    verdict:"你缺的不是<em>邊界</em>，是<em>佈局</em>。牆已經蓋好了，接下來的問題是：門要為誰開。",
+    rx:[["4-2","反派不講道理，他們設局","談判不是靠禮貌。這一集講籌碼、資訊落差，還有沉默怎麼用。"],
+        ["4-3","好人談感情，反派談的是利益結構","把關係從感性的羈絆，升級成經得起時間的系統。"],
+        ["1-2","慾望不是罪，沒有野心才是","你守得很好。接下來該問的是，你到底想要什麼。"]],
+    cta:"免費聽七天，直接跳第四章",
+    share:"我的濫好人指數只有 __分__，測出來是牧羊犬 🐕‍🦺",
+    care:false
+  },
+  {
+    min:0, name:"荒野上的狼", tag:"另一端｜鋒利，但可能太孤獨",
+    scene:"你不太被情緒勒索，因為你根本不在那個場子裡。你的效率很高，你的判斷很快，你也不太浪費時間在不重要的人身上。<br><br>但荒野是有代價的。你可能已經很久沒有一段不用計算的關係了，而長期一個人扛，最後往往不是變強，是耗盡。",
+    sym:["你很少為別人的情緒改變自己的決定","你不太理解為什麼有人會為了小事糾結那麼久","你身邊的人可能覺得你難親近","你習慣自己解決，因為找人幫忙比較麻煩"],
+    verdict:"你缺的不是<em>獠牙</em>，是<em>同盟</em>。故事裡最悲劇的角色，往往不是最壞的那個，是最強又最孤獨的那個。",
+    rx:[["4-1","反派總是團體行動","孤獨的英雄是悲劇。這一集講怎麼把人納進一個雙方都獲益的結構。"],
+        ["3-1","談戀愛可以，但不能耽誤統治世界","帶著完整的自己去愛，而不是把感情當成消耗品。"],
+        ["2-5","反派的大戰只會有你一個人","孤獨是篩選機制，不是終點。差別在你有沒有錨。"]],
+    cta:"免費聽七天，從 4-1 開始",
+    share:"我的濫好人指數只有 __分__，測出來是荒野上的狼 🐺",
+    care:false
+  },
+];
+
+/* ===================== 邏輯 ===================== */
+let idx = 0, answers = [];
+
+/* 選項順序打散：避免使用者看出「每題都選第一個就是羊」。
+   計分邏輯不變，分數綁在選項本身，不綁位置。
+   在測驗開始時打散一次即可，這樣按「上一題」不會重排、造成困惑。 */
+function shuffleOptions(){
+  QS.forEach(function(q){
+    for(var i = q.a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = q.a[i]; q.a[i] = q.a[j]; q.a[j] = t;
+    }
+  });
+}
+
+function start(){
+  shuffleOptions();
+  document.getElementById("cover").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  render();
+}
+
+function render(){
+  const q = QS[idx];
+  document.getElementById("fill").style.width = (idx / QS.length * 100) + "%";
+  document.getElementById("prog").textContent = "第 " + (idx+1) + " 題　／　共 " + QS.length + " 題";
+  document.getElementById("backBtn").style.visibility = idx === 0 ? "hidden" : "visible";
+  document.getElementById("qbox").innerHTML =
+    '<div class="qnum">Q' + String(idx+1).padStart(2,"0") + '</div>' +
+    '<div class="qtext">' + q.q + '</div>' +
+    '<div class="qsub">' + q.s + '</div>' +
+    q.a.map(function(o,i){
+      return '<button class="opt" onclick="pick(' + i + ')">' + o[0] + '</button>';
+    }).join("");
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+function pick(i){
+  answers[idx] = QS[idx].a[i][1];
+  if(idx < QS.length - 1){ idx++; render(); }
+  else { finish(); }
+}
+
+function back(){ if(idx > 0){ idx--; render(); } }
+
+function finish(){
+  const score = answers.reduce(function(a,b){return a+b;},0);
+  const lv = LEVELS.find(function(l){ return score >= l.min; });
+  const segOn = LEVELS.length - LEVELS.indexOf(lv);
+
+  document.getElementById("quiz").style.display = "none";
+  const r = document.getElementById("result");
+  r.style.display = "block";
+
+  r.innerHTML =
+    '<div class="res">' +
+      '<div class="score-label">你的濫好人指數</div>' +
+      '<div class="score-row"><div class="score">' + score + '</div><div class="score-unit">／ 100 分</div></div>' +
+
+      '<div class="scale">' +
+        LEVELS.slice().reverse().map(function(l,i){
+          return '<div class="scale-seg' + (i < segOn ? ' on' : '') + '"></div>';
+        }).join("") +
+      '</div>' +
+      '<div class="scale-lbl"><span>荒野上的狼</span><span>圍欄裡的羊</span></div>' +
+
+      '<div class="sec-t" style="margin-top:36px">你的位置</div>' +
+      '<div class="level">' + lv.name + '</div>' +
+      '<div class="level-sub">' + lv.tag + '</div>' +
+      '<div class="scene">' + lv.scene + '</div>' +
+
+      '<div class="sec-t">你大概常常遇到這些</div>' +
+      '<ul class="sym">' + lv.sym.map(function(s){return '<li>' + s + '</li>';}).join("") + '</ul>' +
+
+      '<div class="verdict">' +
+        '<div class="verdict-t">所以，你真正缺的是</div>' +
+        '<div class="verdict-b">' + lv.verdict + '</div>' +
+      '</div>' +
+
+      '<div class="sec-t">《反派學》給你的三集處方</div>' +
+      '<div class="rx">' +
+        lv.rx.map(function(x){
+          return '<div class="rx-item">' +
+            '<div class="rx-ep">' + x[0] + '</div>' +
+            '<div class="rx-body"><div class="rx-title">' + x[1] + '</div>' +
+            '<div class="rx-why">' + x[2] + '</div></div></div>';
+        }).join("") +
+      '</div>' +
+
+      '<button class="cta" onclick="goBuy(' + LEVELS.indexOf(lv) + ',' + score + ')">' + lv.cta + '</button>' +
+      '<div class="cta-note">月訂閱 400 元，一本書的價格。前七天免費，不喜歡隨時可以走。</div>' +
+
+      '<button class="cta2" onclick="share(' + score + ',' + LEVELS.indexOf(lv) + ')">把測驗傳給那個你想到的人</button>' +
+      '<button class="cta2" onclick="location.reload()">重新測一次</button>' +
+
+      (lv.care ?
+        '<div class="care">如果你此刻正在一段很傷人的關係裡——職場霸凌、親密關係暴力、或剛經歷重大失落——這個測驗的語言可能太硬了。先找個人好好說說話，會比先變強更要緊。這堂課會一直在。</div>'
+        : '') +
+
+      '<div class="foot">' +
+        '這是趣味測驗，不是心理衡鑑，結果僅供參考。<br>' +
+        '測驗中的羊、狼、牧羊犬三分，出自張忘形《反派學》有聲課程。<br>' +
+        '© sandshour 散時間' +
+      '</div>' +
+    '</div>';
+
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+/* 課程頁網址。UTM 會帶出使用者的等級，
+   之後在 GA 就能直接看出哪一級最會轉換。 */
+const COURSE_URL = "https://www.pressplay.cc/project/3928647D9B5EA0550B4CC0911F00A871/about";
+const UTM_SLUG = ["sheep_penned","sheep_waking","dog_teething","sheepdog","wolf_wild"];
+
+function goBuy(li, score){
+  const url = COURSE_URL +
+    "?utm_source=quiz" +
+    "&utm_medium=result" +
+    "&utm_campaign=villain_goodguy_index" +
+    "&utm_content=" + UTM_SLUG[li] +
+    "&utm_term=" + score;
+  window.open(url, "_blank", "noopener");
+}
+
+function share(score, li){
+  const text = LEVELS[li].share.replace("__分__", score + " 分") +
+    "\n你呢？測測看你的善良現在站在哪裡：";
+  const url = location.href;
+  if(navigator.share){
+    navigator.share({title:"濫好人指數測驗｜反派學", text:text, url:url}).catch(function(){});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(text + "\n" + url).then(function(){
+      alert("分享文字已複製，貼到你想貼的地方就可以了。");
+    });
+  } else {
+    prompt("複製這段文字去分享：", text + "\n" + url);
+  }
+}
+</script>
+</body>
+</html>
