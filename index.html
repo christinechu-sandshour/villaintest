@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>濫好人指數測驗｜反派學 有聲課程</title>
+<style>
+  :root{
+    /* ---- 1980 年代週日彩色漫畫版：CMYK 四色印刷的原色 ---- */
+    --paper:#f7efdb;      /* 報紙米黃 */
+    --paper2:#fffaf0;
+    --ink:#17130f;        /* 印刷黑（偏暖，不用純黑） */
+    --red:#e63c2e;
+    --cyan:#0fa3d6;
+    --yellow:#fbc72e;
+    --magenta:#e23c82;
+    --blue:#27357f;
+    --green:#3f9c4c;
+    --spot:var(--red);    /* 結果頁會依等級換色 */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei","微軟正黑體",sans-serif;
+    line-height:1.75; -webkit-font-smoothing:antialiased;
+    min-height:100vh; display:flex; justify-content:center; position:relative;
+  }
+  /* 全頁半色調網點：模擬報紙印刷 */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(circle, rgba(23,19,15,.075) 1.1px, transparent 1.2px);
+    background-size:5px 5px;
+  }
+  .wrap{width:100%; max-width:640px; padding:0 20px 90px; position:relative; z-index:1}
+
+  /* ---------- 漫畫零件 ---------- */
+  .panel{
+    background:var(--paper2); border:3.5px solid var(--ink);
+    box-shadow:7px 7px 0 var(--ink); padding:22px 20px;
+  }
+  .caption{               /* 漫畫旁白框 */
+    /* 用深藍而非黃色：黃色在題目畫面上要專門留給「選項 hover」，
+       一個顏色只能有一個意思，否則手指還沒碰到就已經是那個顏色，回饋等於失效。 */
+    display:inline-block; background:var(--blue); color:var(--paper);
+    border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink);
+    padding:9px 14px; font-size:14.5px; font-weight:800; line-height:1.55;
+    transform:rotate(-.7deg);
+  }
+  .bubble{                /* 對話框 */
+    position:relative; background:var(--paper2);
+    border:3.5px solid var(--ink); border-radius:20px;
+    padding:22px 22px 24px; box-shadow:7px 7px 0 var(--ink);
+    font-size:16px; line-height:1.9;
+  }
+  .bubble::after{
+    content:""; position:absolute; left:40px; bottom:-24px;
+    border-left:14px solid transparent; border-right:22px solid transparent;
+    border-top:24px solid var(--ink);
+  }
+  .bubble::before{
+    content:""; position:absolute; left:45px; bottom:-16px; z-index:2;
+    border-left:10px solid transparent; border-right:16px solid transparent;
+    border-top:17px solid var(--paper2);
+  }
+  .halftone{
+    background-image:radial-gradient(circle, var(--spot) 2.3px, transparent 2.5px);
+    background-size:9px 9px;
+  }
+  .tag{
+    display:inline-block; background:var(--ink); color:var(--paper);
+    font-size:12px; font-weight:900; letter-spacing:.22em;
+    padding:6px 12px 5px;
+  }
+
+  /* ---------- 封面 ---------- */
+  .cover{padding:52px 0 40px; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+  .kicker{margin-bottom:20px}
+  h1{
+    font-size:46px; line-height:1.18; font-weight:900; letter-spacing:-.02em;
+    margin:0 0 20px; text-shadow:4px 4px 0 var(--cyan), 7px 7px 0 var(--ink);
+  }
+  /* 「濫好人指數」五個字：原本紅字配青影，兩個都是高彩度中間調，
+     疊在一起會互相震動、邊緣糊掉。改成深藍字配黃影——
+     深藍對米黃紙的對比是 8.7:1，藍與黃互為補色，不會打架。
+     順帶把紅色留給下方的行動按鈕，紅色在這一頁只代表「可以點」。 */
+  h1 .hl{
+    color:var(--blue);
+    text-shadow:4px 4px 0 var(--yellow), 6px 6px 0 var(--ink);
+  }
+  .lede{font-size:16.5px; margin-bottom:14px; font-weight:600}
+  .lede strong{font-weight:900; background:linear-gradient(transparent 62%, var(--yellow) 62%)}
+  .cover-strip{
+    display:flex; gap:0; margin:30px 0 24px; border:3.5px solid var(--ink);
+    box-shadow:6px 6px 0 var(--ink); overflow:hidden;
+  }
+  .cover-strip div{flex:1; height:16px}
+
+  /* ---------- 進度 ---------- */
+  .bar{position:sticky; top:0; z-index:10; background:var(--paper); padding:16px 0 12px}
+  .bar-track{display:flex; gap:4px}
+  .seg{flex:1; height:15px; border:2.5px solid var(--ink); background:var(--paper2)}
+  .seg.on{background:var(--red)}
+  .bar-txt{font-size:12px; font-weight:800; letter-spacing:.14em; margin-top:9px}
+
+  /* ---------- 題目 ---------- */
+  .q{animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+  .qnum{
+    display:inline-block; background:var(--cyan); color:var(--paper2);
+    border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink);
+    font-size:15px; font-weight:900; letter-spacing:.1em;
+    padding:4px 12px; margin:26px 0 16px; transform:rotate(-1.2deg);
+  }
+  .qtext{font-size:23px; line-height:1.55; font-weight:900; margin-bottom:26px}
+  .opt{
+    display:block; width:100%; text-align:left; cursor:pointer;
+    background:var(--paper2); border:3.5px solid var(--ink);
+    box-shadow:5px 5px 0 var(--ink);
+    padding:15px 18px; margin-bottom:14px; color:var(--ink);
+    font-size:16px; line-height:1.6; font-weight:700; font-family:inherit;
+    transition:transform .1s, box-shadow .1s, background .1s;
+  }
+  .opt:hover{background:var(--yellow); transform:translate(-2px,-2px); box-shadow:8px 8px 0 var(--ink)}
+  .opt:active{transform:translate(4px,4px); box-shadow:1px 1px 0 var(--ink)}
+
+  .back{
+    background:none; border:none; color:var(--ink); font-size:13px; font-weight:800;
+    cursor:pointer; margin-top:16px; padding:6px 0; font-family:inherit; opacity:.6;
+  }
+  .back:hover{opacity:1}
+
+  /* ---------- 結果：爆炸星 ---------- */
+  .res{animation:pop .5s cubic-bezier(.2,1.3,.4,1); padding-top:34px}
+  .burst-wrap{position:relative; width:190px; height:190px; margin:6px auto 4px}
+  .burst{position:absolute; inset:0}
+  .burst-back{background:var(--ink)}
+  .burst-front{inset:6px; background:var(--spot)}
+  .burst-dots{inset:6px; opacity:.28}
+  .burst-num{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; color:var(--paper2);
+    text-shadow:3px 3px 0 rgba(0,0,0,.35);
+  }
+  .burst-num b{font-size:62px; font-weight:900; line-height:1}
+  .burst-num span{font-size:12px; font-weight:900; letter-spacing:.2em; margin-top:2px}
+  .score-cap{text-align:center; font-size:13px; font-weight:900; letter-spacing:.2em; margin-bottom:18px}
+
+  /* 位置條：五格代表五個等級，只點亮使用者所在的那一格。
+     原本是從左累積填滿，但那樣「圍欄裡的羊」會整條填滿，
+     看起來像滿分達成——跟它其實是最糟的結果剛好相反。 */
+  .scale-mark{display:flex; gap:4px; margin:26px 0 0}
+  .mk{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end}
+  .mk b{font-size:11px; font-weight:900; letter-spacing:.06em; white-space:nowrap}
+  .mk i{font-style:normal; font-size:14px; line-height:1.1; color:var(--spot);
+        -webkit-text-stroke:.5px var(--ink)}
+  .scale{display:flex; gap:4px; margin:2px 0 7px}
+  .scale-seg{flex:1; height:15px; border:2.5px solid var(--ink); background:var(--paper2)}
+  .scale-seg.on{background:var(--spot)}
+  .scale-lbl{display:flex; justify-content:space-between; font-size:11px; font-weight:800; letter-spacing:.05em}
+  .scale-note{margin-top:9px; font-size:11.5px; font-weight:700; line-height:1.7; opacity:.72}
+
+  .level-band{
+    margin:30px 0 6px; padding:14px 18px; background:var(--spot);
+    border:3.5px solid var(--ink); box-shadow:7px 7px 0 var(--ink);
+    transform:rotate(-.9deg);
+  }
+  .level{font-size:36px; font-weight:900; line-height:1.2; color:var(--paper2);
+         text-shadow:3px 3px 0 rgba(0,0,0,.3)}
+  .level-sub{font-size:14px; font-weight:800; color:var(--paper2); margin-top:4px; opacity:.95}
+
+  .hero{
+    width:100%; display:block; margin:34px 0 30px;
+    border:3.5px solid var(--ink); box-shadow:7px 7px 0 var(--ink); background:var(--paper2);
+  }
+  .hero.solo{margin-top:30px}            /* 圖片本身就是等級名稱時 */
+  .band-slim{
+    margin:0 0 30px; padding:12px 18px; background:var(--spot);
+    border:3.5px solid var(--ink); box-shadow:7px 7px 0 var(--ink);
+    transform:rotate(-.9deg);
+    font-size:16px; font-weight:900; color:var(--paper2);
+    text-shadow:2px 2px 0 rgba(0,0,0,.28);
+  }
+  /* 給螢幕閱讀器與瀏覽器翻譯用；視覺上不顯示 */
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
+
+  .sec-t{margin:34px 0 14px}
+  ul.sym{list-style:none}
+  ul.sym li{
+    background:var(--paper2); border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink);
+    padding:12px 16px; margin-bottom:11px; font-size:15.5px; font-weight:700; line-height:1.6;
+  }
+  .verdict{
+    margin:30px 0; padding:24px 22px; background:var(--yellow);
+    border:3.5px solid var(--ink); box-shadow:7px 7px 0 var(--ink); transform:rotate(.6deg);
+  }
+  .verdict-t{font-size:12px; font-weight:900; letter-spacing:.2em; margin-bottom:10px; opacity:.7}
+  .verdict-b{font-size:20px; font-weight:900; line-height:1.6}
+  .verdict-b em{font-style:normal; color:var(--red); text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:4px}
+
+  .rx-item{
+    display:flex; gap:14px; background:var(--paper2);
+    border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink);
+    padding:14px 16px; margin-bottom:12px;
+  }
+  .rx-ep{
+    flex:0 0 auto; align-self:flex-start; background:var(--cyan); color:var(--paper2);
+    border:2.5px solid var(--ink); font-size:13px; font-weight:900;
+    padding:3px 8px; letter-spacing:.03em;
+  }
+  .rx-title{font-size:16px; font-weight:900; margin-bottom:4px; line-height:1.5}
+  .rx-why{font-size:13.5px; font-weight:600; line-height:1.7; opacity:.85}
+
+  .cta{
+    display:block; width:100%; text-align:center; margin-top:36px;
+    background:var(--red); color:var(--paper2);
+    border:4px solid var(--ink); box-shadow:8px 8px 0 var(--ink);
+    padding:20px; font-size:19px; font-weight:900; font-family:inherit; cursor:pointer;
+    letter-spacing:.02em; text-shadow:2px 2px 0 rgba(0,0,0,.28);
+    transition:transform .1s, box-shadow .1s;
+  }
+  .cta:hover{transform:translate(-2px,-2px); box-shadow:11px 11px 0 var(--ink)}
+  .cta:active{transform:translate(6px,6px); box-shadow:2px 2px 0 var(--ink)}
+  .cta-note{text-align:center; font-size:13px; font-weight:700; margin-top:14px}
+  .cta2{
+    display:block; width:100%; text-align:center; margin-top:14px;
+    background:var(--paper2); color:var(--ink);
+    border:3.5px solid var(--ink); box-shadow:5px 5px 0 var(--ink);
+    padding:16px; font-size:16px; font-weight:800; font-family:inherit; cursor:pointer;
+    transition:transform .1s, box-shadow .1s, background .1s;
+  }
+  .cta2:hover{background:var(--cyan); color:var(--paper2); transform:translate(-2px,-2px); box-shadow:8px 8px 0 var(--ink)}
+  .cta2:active{transform:translate(4px,4px); box-shadow:1px 1px 0 var(--ink)}
+
+  /* 心理安全提醒：刻意不套漫畫效果，語氣需要安靜 */
+  .care{
+    margin-top:34px; padding:18px 20px; background:#efe9da;
+    border:2px solid rgba(23,19,15,.45); border-radius:4px;
+    font-size:13.5px; line-height:1.85; font-weight:600;
+  }
+  .foot{
+    margin-top:36px; padding-top:18px; border-top:3px solid var(--ink);
+    font-size:12px; font-weight:600; line-height:1.9; opacity:.7;
+  }
+
+  @keyframes pop{from{opacity:0; transform:translateY(14px) scale(.985)} to{opacity:1; transform:none}}
+  @media(max-width:420px){
+    h1{font-size:36px; text-shadow:3px 3px 0 var(--cyan), 5px 5px 0 var(--ink)}
+    .qtext{font-size:20px} .level{font-size:29px}
+    .burst-wrap{width:165px;height:165px} .burst-num b{font-size:54px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ========== 封面 ========== -->
+  <div id="cover" class="cover">
+    <div class="kicker"><span class="tag">反派學　趣味測驗</span></div>
+    <h1>你的<span class="hl">濫好人指數</span><br>是幾分？</h1>
+    <div class="cover-strip">
+      <div style="background:#e63c2e"></div><div style="background:#f2861f"></div>
+      <div style="background:#fbc72e"></div><div style="background:#3f9c4c"></div>
+      <div style="background:#0fa3d6"></div><div style="background:#27357f"></div>
+      <div style="background:#e23c82"></div>
+    </div>
+    <p class="lede">退一步，對方就進了兩步。<br>你不是脾氣好，你可能只是<strong>還沒發現自己可以有立場</strong>。</p>
+    <p class="lede">十個情境，看看你的善良現在站在哪個位置——是圍欄裡的羊，還是荒野上的狼。</p>
+    <div style="margin:26px 0 8px"><span class="caption">10 題　約 90 秒　結果會告訴你，你缺的到底是什麼</span></div>
+    <button class="cta" onclick="start()">開始測驗</button>
+    <div class="cta-note">這是趣味測驗，不是心理衡鑑</div>
+  </div>
+
+  <!-- ========== 題目 ========== -->
+  <div id="quiz" style="display:none">
+    <div class="bar">
+      <div class="bar-track" id="track"></div>
+      <div class="bar-txt" id="prog"></div>
+    </div>
+    <div class="q" id="qbox"></div>
+    <button class="back" id="backBtn" onclick="back()">← 上一題</button>
+  </div>
+
+  <!-- ========== 結果 ========== -->
+  <div id="result" style="display:none"></div>
+
+</div>
+
+<script>
+/* ===================== 題庫 ===================== */
+/* 分數方向：越高＝越濫好人。每題最高 10 分，滿分 100。 */
+const QS = [
+  { q:"群組裡有人問「這個有人可以幫忙嗎？」已讀十二個人，沒有人回。",
+    a:[["我通常會是第一個跳出來的",10],
+       ["再等一下下，真的沒人我才回",7],
+       ["看是誰問的，再決定",3],
+       ["不關我的事，我不會回",0]] },
+
+  { q:"同事把一件事丟過來，說「這個你比較會啦」。",
+    a:[["心裡嘆一口氣，還是接了",10],
+       ["接了，但會唸他一句",7],
+       ["先問清楚為什麼是我",3],
+       ["直接說我沒空",0]] },
+
+  { q:"你剛剛拒絕了一個請求。當天晚上——",
+    a:[["一直在想是不是講太重了",10],
+       ["有點在意，但還過得去",7],
+       ["早就忘了這件事",3],
+       ["我很少需要拒絕，因為別人不太敢找我",0]] },
+
+  { q:"老闆今天臉色很臭，跟你講話特別短。",
+    a:[["我開始回想我哪裡做錯了",10],
+       ["有點在意，接下來會小心一點",7],
+       ["應該是他自己的事吧",3],
+       ["我沒注意到",0]] },
+
+  { q:"你幫了一個很大的忙，對方沒有說謝謝。",
+    a:[["算了，我本來就不是為了道謝",10],
+       ["有點失落，但不會講出來",7],
+       ["心裡記一筆，下次不幫",3],
+       ["我不太做沒有回報的事",0]] },
+
+  { q:"家族聚會，長輩又講了那句「你最懂事，就多擔待一點」。",
+    a:[["我會笑一笑，然後照做",10],
+       ["心裡不舒服，但不會在場上講",7],
+       ["當場說我最近真的忙不過來",3],
+       ["我已經不太出席這種場合了",0]] },
+
+  { q:"跟重要的人一起決定要吃什麼、去哪裡的時候——",
+    a:[["我通常說「都可以」，然後配合對方",10],
+       ["會講一下，但對方堅持我就讓了",7],
+       ["我會說我想要的，然後一起喬",3],
+       ["多半照我的意思，不然我寧可不去",0]] },
+
+  { q:"有人用「開玩笑」的方式，講了你不舒服的話。",
+    a:[["跟著笑，假裝沒事",10],
+       ["笑一下，但心裡不舒服很久",7],
+       ["當場說「這樣講我不太喜歡」",3],
+       ["我會反問他，為什麼要講這個",0]] },
+
+  { q:"想一下「我這輩子最想達成的事」。你的第一個念頭是——",
+    a:[["好像……沒有特別想到什麼",10],
+       ["有，但我覺得應該不太可能",7],
+       ["有，我正在慢慢做",3],
+       ["有，而且我知道下一步是什麼",0]] },
+
+  { q:"有個人一直跟你訴苦。同樣的問題講了半年，也沒打算改。",
+    a:[["還是會聽，他需要有人聽他說",10],
+       ["會聽，但開始覺得有點累",7],
+       ["減少回應的頻率",3],
+       ["我已經不太聯絡了",0]] },
+];
+
+/* ===================== 分級 ===================== */
+/* spot：每個等級一個 1980 年代印刷原色
+   img ：把五張圖放進同層的 images/ 資料夾，檔名照下面寫的就會自動出現。
+         圖不存在時自動隱藏，不會壞版。 */
+const LEVELS = [
+  {
+    min:80, name:"圍欄裡的羊", tag:"重度｜你的善良已經欠了自己很久",
+    spot:"#e23c82",
+    img:"images/sheep_penned.png", alt:"圍欄裡的羊",
+    scene:"你不是不會拒絕，你是每一次拒絕之後都要花三天替自己贖罪。所以久而久之，答應變成比較便宜的選項。<br><br>問題是，圍欄裡從來就沒有安全這回事。它只是把你圈在一個「你的付出被視為理所當然」的範圍裡。",
+    sym:["別人的情緒，你會下意識當成自己的責任","你的行事曆是被別人填滿的，不是被你自己","你想不起來最近一次「為自己」做的決定是什麼","你不是沒有脾氣，你是把它們全部吞回去了"],
+    verdict:"你缺的不是<em>善良</em>，是<em>選擇</em>。你的善良從來沒有機會證明自己是真的——因為你根本沒給過自己第二個選項。",
+    rx:[["1-1","你的善良，是因為沒得選擇嗎？","從這一集開始。它會用一個問題，把你的自我認同拆開來看一次。"],
+        ["2-1","反派從不後悔，自己選擇自己負責","選擇這件事，是從願意承擔開始的。把「為什麼是我」換成「那我選什麼」。"],
+        ["3-3","反派沒有情緒，就不會被勒索","你最大的漏洞是替別人扛情緒。這一集教你把它還回去。"]],
+    share:"我的濫好人指數 __分__，官方認證圍欄裡的羊 🐑",
+    care:true
+  },
+  {
+    min:60, name:"開始抬頭的羊", tag:"中度｜你已經知道不對勁了",
+    spot:"#f2861f",
+    img:"images/sheep_waking.png", alt:"開始抬頭的羊",
+    scene:"你已經會在心裡翻白眼，這是好事——代表那個「我怎麼又答應了」的自己開始有聲音了。<br><br>但目前為止，翻白眼還只停留在心裡。你的界線是隱形的，只有你自己知道它在哪，所以沒有人會遵守它。",
+    sym:["你會抱怨，但抱怨完還是照做","你的拒絕通常包著三層解釋和一句對不起","你分得出誰在利用你，但還是不太敢直說","你偶爾會想「如果我狠一點會怎樣」，然後就沒有然後了"],
+    verdict:"你缺的不是<em>覺察</em>，是<em>語言</em>。你已經看見了，只是還沒有一句話可以說出口。",
+    rx:[["1-5","打扮不是虛榮，是武裝","你的界線是隱形的。這一集講怎麼讓它在你開口之前就先被看見。"],
+        ["3-4","偽善之人的精神操控是打壓","給你當場可以用的句子，不用等到回家才想到該怎麼回。"],
+        ["4-2","反派不講道理，他們設局","有時候最有力的語言是不說話。沉默怎麼用，這一集講得最清楚。"]],
+    share:"我的濫好人指數 __分__，一隻開始抬頭的羊 🐑",
+    care:true
+  },
+  {
+    min:40, name:"剛長牙的狗", tag:"輕度｜你會反擊，只是還不穩",
+    spot:"#3f9c4c",
+    img:"images/dog_teething.png", alt:"剛長牙的狗",
+    scene:"你已經拒絕過人，也活下來了，世界沒有塌。這是最關鍵的一次經驗。<br><br>但你的強硬還是情緒性的——好的時候滴水不漏，累的時候一句話就被推翻。你缺的不是勇氣，是一套不靠當天心情運作的系統。",
+    sym:["你的界線是浮動的，看當天的能量","你會後悔——有時後悔太軟，有時後悔太兇","你已經懂得說不，但說完還是會補償性地多做一點","遇到強勢的人，你的判斷力會掉一半"],
+    verdict:"你缺的不是<em>力氣</em>，是<em>穩定</em>。真正的底氣不是每次都贏，是每次都一樣。",
+    rx:[["1-3","為什麼反派從不抱怨","一分鐘的情緒緩衝區。讓反應慢一秒，判斷就穩了。"],
+        ["2-4","反派的底氣，是凡事做好準備","把臨場反應換成事前設計。恐懼會變成佈局的養分。"],
+        ["3-2","放下你的聖母心，冷血才是救贖","你說完不之後還是會多做一點。這一集處理那個補償的衝動。"]],
+    share:"我的濫好人指數 __分__，一隻剛長牙的狗 🐕",
+    care:false
+  },
+  {
+    min:20, name:"牧羊犬", tag:"健康｜有獠牙，也有底線",
+    spot:"#0fa3d6",
+    img:"images/sheepdog.png", alt:"牧羊犬",
+    scene:"你有能力讓別人不好過，但你選擇不。這不是軟弱，這是這個測驗裡最高的位置。<br><br>你已經走完了大部分人還在掙扎的路。真正的問題不在防守——是你的力量現在用在哪裡。守著一群羊，跟走出去劃定自己的戰場，是兩件事。",
+    sym:["你會拒絕，而且不需要解釋太多","你的情緒不太容易被別人綁架","你身邊常有人來找你討主意","但你有時候會覺得：守成有了，然後呢？"],
+    verdict:"你缺的不是<em>邊界</em>，是<em>佈局</em>。牆已經蓋好了，接下來的問題是：門要為誰開。",
+    rx:[["1-2","慾望不是罪，沒有野心才是","你守得很好。接下來該問的是，你到底想要什麼。"],
+        ["2-3","反派不留戀沉沒成本","「如果今天是第一天，我還會守這些嗎？」這個問題對你最有用。"],
+        ["4-2","反派不講道理，他們設局","談判不是靠禮貌。這一集講籌碼、資訊落差，還有沉默怎麼用。"]],
+    share:"我的濫好人指數只有 __分__，測出來是牧羊犬 🐕‍🦺",
+    care:false
+  },
+  {
+    min:0, name:"荒野上的狼", tag:"另一端｜鋒利，但可能太孤獨",
+    spot:"#27357f",
+    img:"images/wolf_wild.png", alt:"荒野上的狼",
+    scene:"你不太被情緒勒索，因為你根本不在那個場子裡。你的效率很高，你的判斷很快，你也不太浪費時間在不重要的人身上。<br><br>但荒野是有代價的。你可能已經很久沒有一段不用計算的關係了，而長期一個人扛，最後往往不是變強，是耗盡。",
+    sym:["你很少為別人的情緒改變自己的決定","你不太理解為什麼有人會為了小事糾結那麼久","你身邊的人可能覺得你難親近","你習慣自己解決，因為找人幫忙比較麻煩"],
+    verdict:"你缺的不是<em>獠牙</em>，是<em>同盟</em>。故事裡最悲劇的角色，往往不是最壞的那個，是最強又最孤獨的那個。",
+    rx:[["2-5","反派的大戰只會有你一個人","孤獨是篩選機制，不是終點。差別在你有沒有錨。"],
+        ["3-1","談戀愛可以，但不能耽誤統治世界","帶著完整的自己去愛，而不是把感情當成消耗品。"],
+        ["4-1","反派總是團體行動","孤獨的英雄是悲劇。這一集講怎麼把人納進一個雙方都獲益的結構。"]],
+    share:"我的濫好人指數只有 __分__，測出來是荒野上的狼 🐺",
+    care:false
+  },
+];
+
+/* ===================== 圖文分工開關 ===================== */
+/* 如果插圖裡已經畫上等級名稱／診斷句，就把對應的開關打開，
+   程式會自動不再輸出文字版，避免圖文重複。
+   被隱藏的文字仍會以 sr-only 保留在頁面上，供螢幕閱讀器與瀏覽器翻譯使用。
+   圖片若載入失敗，文字版會自動現身，不會開天窗。 */
+const IMG_HAS_NAME = true;   // 圖片裡含「剛長牙的狗」這類等級名稱
+const IMG_HAS_TAG  = true;  // 圖片裡含「輕度｜你會反擊，只是還不穩」這句診斷
+
+/* ===================== 邏輯 ===================== */
+let idx = 0, answers = [];
+
+/* 產生爆炸星的 clip-path。spikes＝角數，outer/inner＝內外半徑（%） */
+function burstPath(spikes, outer, inner, tilt){
+  var pts = [];
+  for(var i = 0; i < spikes * 2; i++){
+    var r = (i % 2) ? inner : outer;
+    var a = Math.PI * i / spikes - Math.PI / 2 + (tilt || 0);
+    pts.push((50 + r * Math.cos(a)).toFixed(2) + "% " + (50 + r * Math.sin(a)).toFixed(2) + "%");
+  }
+  return "polygon(" + pts.join(",") + ")";
+}
+
+/* 三集處方的兩條規則，寫成程式而不是靠人記：
+   一、依集數由小到大排列（1-1、2-5、4-3），不亂排
+   二、三集必須分屬不同章，同一章不會出現兩集
+   排序在渲染時執行，所以之後改資料也不會排錯；
+   若不小心把同章的兩集放在一起，開發者工具會跳警告。 */
+function sortRx(rx){
+  return rx.slice().sort(function(a,b){
+    var p = a[0].split("-").map(Number), q = b[0].split("-").map(Number);
+    return (p[0] - q[0]) || (p[1] - q[1]);
+  });
+}
+function auditRx(){
+  LEVELS.forEach(function(l){
+    var ch = l.rx.map(function(x){ return x[0].split("-")[0]; });
+    if(new Set(ch).size !== ch.length){
+      console.warn("【處方檢查】" + l.name + " 有兩集以上落在同一章：" +
+        l.rx.map(function(x){ return x[0]; }).join("、"));
+    }
+  });
+}
+auditRx();
+
+/* 選項順序打散：避免使用者看出「每題都選第一個就是羊」。
+   計分邏輯不變，分數綁在選項本身，不綁位置。
+   在測驗開始時打散一次即可，這樣按「上一題」不會重排、造成困惑。 */
+function shuffleOptions(){
+  QS.forEach(function(q){
+    for(var i = q.a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = q.a[i]; q.a[i] = q.a[j]; q.a[j] = t;
+    }
+  });
+}
+
+function start(){
+  shuffleOptions();
+  document.getElementById("cover").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  document.getElementById("track").innerHTML =
+    QS.map(function(){ return '<div class="seg"></div>'; }).join("");
+  render();
+}
+
+function render(){
+  const q = QS[idx];
+  const segs = document.querySelectorAll("#track .seg");
+  segs.forEach(function(s, i){ s.classList.toggle("on", i < idx); });
+  document.getElementById("prog").textContent = "第 " + (idx+1) + " 題　／　共 " + QS.length + " 題";
+  document.getElementById("backBtn").style.visibility = idx === 0 ? "hidden" : "visible";
+  document.getElementById("qbox").innerHTML =
+    '<div class="qnum">Q' + String(idx+1).padStart(2,"0") + '</div>' +
+    '<div class="qtext">' + q.q + '</div>' +
+    q.a.map(function(o,i){
+      return '<button class="opt" onclick="pick(' + i + ')">' + o[0] + '</button>';
+    }).join("");
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+function pick(i){
+  answers[idx] = QS[idx].a[i][1];
+  if(idx < QS.length - 1){ idx++; render(); }
+  else { finish(); }
+}
+
+function back(){ if(idx > 0){ idx--; render(); } }
+
+/* 依開關組出「等級名 ＋ 診斷句 ＋ 插圖」這一段。
+   四種組合都處理，圖片載入失敗時會自動把文字版叫出來。 */
+function levelBlock(lv){
+  const bandFull =
+    '<div class="level-band">' +
+      '<div class="level">' + lv.name + '</div>' +
+      '<div class="level-sub">' + lv.tag + '</div>' +
+    '</div>';
+  const bandName =
+    '<div class="level-band"><div class="level">' + lv.name + '</div></div>';
+  const bandTag =
+    '<div class="band-slim">' + lv.tag + '</div>';
+
+  /* 圖片載入失敗時要補回來的內容 */
+  let fallback = "";
+  if(IMG_HAS_NAME && IMG_HAS_TAG) fallback = bandFull;
+  else if(IMG_HAS_NAME)           fallback = bandName;
+  else if(IMG_HAS_TAG)            fallback = bandTag;
+
+  const alt = lv.name + "。" + lv.tag.replace("｜", "，");
+  const img =
+    '<img class="hero' + (IMG_HAS_NAME ? ' solo' : '') + '" src="' + lv.img + '" alt="' + alt + '" ' +
+    'onerror="this.style.display=\'none\';var f=document.getElementById(\'lvFallback\');if(f)f.style.display=\'block\'">';
+
+  /* 視覺上被圖片取代的文字，仍留一份給螢幕閱讀器與翻譯工具 */
+  let sr = "";
+  if(IMG_HAS_NAME) sr += '<span class="sr-only">' + lv.name + '</span>';
+  if(IMG_HAS_TAG)  sr += '<span class="sr-only">' + lv.tag + '</span>';
+
+  const fb = fallback
+    ? '<div id="lvFallback" style="display:none">' + fallback + '</div>'
+    : "";
+
+  if(IMG_HAS_NAME && IMG_HAS_TAG) return sr + img + fb;
+  if(IMG_HAS_NAME)                return sr + img + fb + bandTag;
+  if(IMG_HAS_TAG)                 return sr + bandName + img + fb;
+  return bandFull + img;
+}
+
+function finish(){
+  const score = answers.reduce(function(a,b){return a+b;},0);
+  const lv = LEVELS.find(function(l){ return score >= l.min; });
+  const li = LEVELS.indexOf(lv);
+  const pos = LEVELS.length - 1 - li;   // 位置條由左至右：狼→羊，左邊是低分
+  const bp = burstPath(18, 50, 39, 0.06);
+
+  document.getElementById("quiz").style.display = "none";
+  const r = document.getElementById("result");
+  r.style.display = "block";
+  r.style.setProperty("--spot", lv.spot);
+
+  r.innerHTML =
+    '<div class="res">' +
+      '<div class="score-cap">你的濫好人指數</div>' +
+      '<div class="burst-wrap">' +
+        '<div class="burst burst-back" style="clip-path:' + bp + '"></div>' +
+        '<div class="burst burst-front" style="clip-path:' + bp + '"></div>' +
+        '<div class="burst burst-dots halftone" style="clip-path:' + bp + ';--spot:rgba(255,255,255,.9)"></div>' +
+        '<div class="burst-num"><b>' + score + '</b><span>／ 100 分</span></div>' +
+      '</div>' +
+
+      '<div class="scale-mark">' +
+        LEVELS.map(function(_,i){
+          return '<div class="mk">' + (i === pos ? '<b>你在這裡</b><i>&#9660;</i>' : '') + '</div>';
+        }).join("") +
+      '</div>' +
+      '<div class="scale">' +
+        LEVELS.slice().reverse().map(function(l,i){
+          return '<div class="scale-seg' + (i === pos ? ' on' : '') + '"></div>';
+        }).join("") +
+      '</div>' +
+      '<div class="scale-lbl"><span>荒野上的狼</span><span>圍欄裡的羊</span></div>' +
+      '<div class="scale-note">共五個等級。越往右，越常把別人放在自己前面。</div>' +
+
+      levelBlock(lv) +
+
+      '<div class="bubble">' + lv.scene + '</div>' +
+
+      '<div class="sec-t"><span class="tag">你大概常常遇到這些</span></div>' +
+      '<ul class="sym">' + lv.sym.map(function(s){return '<li>' + s + '</li>';}).join("") + '</ul>' +
+
+      '<div class="verdict">' +
+        '<div class="verdict-t">所以，你真正缺的是</div>' +
+        '<div class="verdict-b">' + lv.verdict + '</div>' +
+      '</div>' +
+
+      '<div class="sec-t"><span class="tag">《反派學》給你的三集處方</span></div>' +
+      '<div class="rx">' +
+        sortRx(lv.rx).map(function(x){
+          return '<div class="rx-item">' +
+            '<div class="rx-ep">' + x[0] + '</div>' +
+            '<div class="rx-body"><div class="rx-title">' + x[1] + '</div>' +
+            '<div class="rx-why">' + x[2] + '</div></div></div>';
+        }).join("") +
+      '</div>' +
+
+      '<button class="cta" onclick="goBuy(' + li + ',' + score + ')">' + CTA_TEXT + '</button>' +
+      '<div class="cta-note">' + CTA_NOTE + '</div>' +
+
+      '<button class="cta2" onclick="share(' + score + ',' + li + ')">把測驗傳給那個你想到的人</button>' +
+      '<button class="cta2" onclick="location.reload()">重新測一次</button>' +
+
+      (lv.care ?
+        '<div class="care">重要提醒：如果你此刻正在一段傷人的關係裡—職場霸凌、親密關係暴力、或剛經歷重大失落—這個測驗的語言可能有些直接。先找人好好聊聊，會比變強更要緊。這堂課會在這裡等你。</div>'
+        : '') +
+
+      '<div class="foot">' +
+        '這是趣味測驗，不是心理衡鑑，結果僅供參考。<br>' +
+        '測驗中的羊、狼、牧羊犬三個角色比喻，出自張忘形《反派學》有聲課程。<br>' +
+        '© sandshour 散時間' +
+      '</div>' +
+    '</div>';
+
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+/* 課程頁網址。UTM 會帶出使用者的等級，
+   之後在 GA 就能直接看出哪一級最會轉換。 */
+/* PressPlay 短網址。點擊時以 window.open(..., "_blank") 另開分頁。
+   下面那條完整網址是原本的課程頁，先留著備用：
+   https://www.pressplay.cc/project/3928647D9B5EA0550B4CC0911F00A871/about
+
+   ⚠ 上線前請實際點一次，確認 UTM 參數有沒有跟著轉址過去。
+   短網址服務有時會把 ?查詢字串 吃掉；若被吃掉，就看不出哪一級最會轉換，
+   屆時要改回完整網址，或請 PressPlay 針對五個等級各開一條短網址。 */
+const COURSE_URL = "https://www.pressplay.cc/link/s/86DAAD56";
+
+/* 導購按鈕的文字。五個等級共用一組。
+   刻意不寫任何平台專屬的方案條件（訂閱價、試用天數），
+   因為目前導向 PressPlay，條款與散時間站上不同，寫死會出錯。
+   之後若改導散時間，只要改這兩行。 */
+const CTA_TEXT = "試聽課程！看更多詳細介紹";
+const CTA_NOTE = "課程現正優惠中！學會用「反派精神」奪回主導權";
+const UTM_SLUG = ["sheep_penned","sheep_waking","dog_teething","sheepdog","wolf_wild"];
+
+function goBuy(li, score){
+  const url = COURSE_URL +
+    "?utm_source=quiz" +
+    "&utm_medium=result" +
+    "&utm_campaign=villain_goodguy_index" +
+    "&utm_content=" + UTM_SLUG[li] +
+    "&utm_term=" + score;
+  window.open(url, "_blank", "noopener");
+}
+
+/* 分享出去的網址。
+   上線後把 SHARE_URL 填成測驗的正式網址，例如 https://sandshour.com/quiz/goodguy
+   留空時會退回「目前頁面網址」——本機開檔測試會是 file:// 路徑，別人點不開，這是正常的。
+
+   注意這裡刻意把原本網址上的 ?查詢字串 砍掉：
+   如果使用者是從廣告點進來的（網址帶著 utm_source=fb），直接分享 location.href
+   會把他的 UTM 一起送給朋友，朋友的造訪就會被算成那則廣告的功勞。
+   改掛 utm_source=share，分享帶來的流量才會被正確歸因。 */
+const SHARE_URL = "";
+
+function shareUrl(){
+  const base = SHARE_URL || location.href.split("?")[0].split("#")[0];
+  return base + (base.indexOf("?") >= 0 ? "&" : "?") +
+    "utm_source=share&utm_medium=social&utm_campaign=villain_goodguy_index";
+}
+
+function share(score, li){
+  const text = LEVELS[li].share.replace("__分__", score + " 分") +
+    "\n你呢？測測看你的善良現在站在哪裡：";
+  const url = shareUrl();
+  if(navigator.share){
+    navigator.share({title:"濫好人指數測驗｜反派學", text:text, url:url}).catch(function(){});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(text + "\n" + url).then(function(){
+      alert("分享文字已複製，貼到你想貼的地方就可以了。");
+    });
+  } else {
+    prompt("複製這段文字去分享：", text + "\n" + url);
+  }
+}
+</script>
+</body>
+</html>
